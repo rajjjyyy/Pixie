@@ -3,8 +3,8 @@ import styles from './ModelSelector.module.css'
 const MODELS = [
   {
     id: 'bria',
-    name: 'BRIA RMBG-1.4',
-    description: 'Open-source MIT-licensed model. Excellent on complex scenes, hair, and transparent objects. Set HF_TOKEN in backend to upgrade to gated RMBG-2.0.',
+    name: 'BiRefNet · General',
+    description: 'State-of-the-art bilateral reference network. Best accuracy on complex backgrounds, fine hair, and semi-transparent edges. Open-source, no authentication needed.',
     badge: 'Recommended',
     icon: (
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

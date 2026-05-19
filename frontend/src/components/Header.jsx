@@ -24,7 +24,7 @@ export default function Header() {
         </div>
 
         <nav className={styles.nav}>
-          <span className={styles.tagline}>Background Remover · Powered by BRIA RMBG-1.4 &amp; U²-Net</span>
+          <span className={styles.tagline}>Background Remover · Powered by BiRefNet &amp; U²-Net</span>
         </nav>
       </div>
 

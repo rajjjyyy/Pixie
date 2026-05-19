@@ -13,24 +13,25 @@ from fastapi import FastAPI, File, Form, UploadFile, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response
 
-from remover import BriaRemover, RembgRemover
+from remover import BiRefNetRemover, RembgRemover
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 log = logging.getLogger("pixie")
 
 # ── Model singletons (loaded once at startup) ──────────────────────────────
 
-_bria:  BriaRemover  | None = None
-_rembg: RembgRemover | None = None
+_birefnet: BiRefNetRemover | None = None
+_rembg:    RembgRemover    | None = None
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Pre-warm rembg on startup (BRIA is lazy-loaded on first request)."""
-    global _rembg
+    """Pre-warm both models on startup so the first request is fast."""
+    global _rembg, _birefnet
     log.info("Pre-loading rembg/U²-Net…")
     _rembg = RembgRemover()
-    log.info("rembg ready.")
+    log.info("Pre-loading BiRefNet-general…")
+    _birefnet = BiRefNetRemover()
     yield
     log.info("Shutting down.")
 
@@ -59,7 +60,7 @@ async def remove_background(
     file: UploadFile = File(...),
     model: str       = Form("bria"),
 ):
-    global _bria, _rembg
+    global _birefnet, _rembg
 
     # ── Validate content type
     if file.content_type and not file.content_type.startswith("image/"):
@@ -76,11 +77,9 @@ async def remove_background(
 
     try:
         if model == "bria":
-            if _bria is None:
-                log.info("Lazy-loading BRIA RMBG-2.0…")
-                _bria = BriaRemover()
-                log.info("BRIA ready.")
-            png_bytes = _bria.remove(raw)
+            if _birefnet is None:
+                _birefnet = BiRefNetRemover()
+            png_bytes = _birefnet.remove(raw)
 
         elif model == "rembg":
             if _rembg is None:
