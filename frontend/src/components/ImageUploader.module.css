@@ -35,7 +35,7 @@
   content: '';
   position: absolute;
   inset: 0;
-  background: radial-gradient(ellipse 80% 60% at 50% 50%, var(--neon-glow-soft), transparent);
+  background: var(--neon-glow-soft);
   opacity: 0;
   transition: opacity var(--transition);
 }
@@ -80,7 +80,7 @@
   height: 64px;
   border-radius: 50%;
   background: var(--neon-glow-soft);
-  border: 1px solid rgba(0, 200, 255, 0.2);
+  border: 1px solid var(--border-bright);
   display: flex;
   align-items: center;
   justify-content: center;

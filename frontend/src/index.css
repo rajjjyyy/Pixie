@@ -10,28 +10,29 @@
 }
 
 :root {
-  --bg-base:        #06080f;
-  --bg-surface:     #0c1120;
-  --bg-card:        #0f1629;
-  --bg-card-hover:  #131d35;
-  --border:         #1c2d52;
-  --border-bright:  #2a4480;
+  /* ── Lucario flat colour palette — no gradients ── */
+  --bg-base:        #06081A;
+  --bg-surface:     #0A0F2C;
+  --bg-card:        #0D1337;
+  --bg-card-hover:  #111840;
+  --border:         #1A2B60;
+  --border-bright:  #273F8A;
 
-  --neon:           #00c8ff;
-  --neon-dim:       #0096cc;
-  --neon-glow:      rgba(0, 200, 255, 0.35);
-  --neon-glow-soft: rgba(0, 200, 255, 0.12);
+  --neon:           #3D6FF5;   /* Lucario steel-blue body */
+  --neon-dim:       #2B55D8;
+  --neon-glow:      rgba(61, 111, 245, 0.28);
+  --neon-glow-soft: rgba(61, 111, 245, 0.09);
 
-  --accent2:        #5b6af0;
-  --accent2-glow:   rgba(91, 106, 240, 0.3);
+  --accent2:        #3D7DCA;   /* Lucario aura blue */
+  --accent2-glow:   rgba(61, 125, 202, 0.25);
 
-  --text-primary:   #ddeeff;
-  --text-secondary: #6a8cae;
-  --text-muted:     #3a5570;
+  --text-primary:   #D4E4FF;
+  --text-secondary: #4868A8;
+  --text-muted:     #212E5C;
 
-  --success:        #00e599;
-  --error:          #ff4d6d;
-  --warning:        #ffb347;
+  --success:        #22C55E;
+  --error:          #EF4444;
+  --warning:        #3D7DCA;
 
   --radius-sm:  6px;
   --radius-md:  12px;
@@ -52,10 +53,6 @@ body {
   font-size: 15px;
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
-  background-image:
-    radial-gradient(ellipse 80% 60% at 50% -10%, rgba(0, 200, 255, 0.07) 0%, transparent 60%),
-    radial-gradient(ellipse 50% 40% at 80% 90%,  rgba(91, 106, 240, 0.06) 0%, transparent 55%);
-  background-attachment: fixed;
 }
 
 /* Scrollbar */

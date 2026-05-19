@@ -2,9 +2,8 @@
   position: sticky;
   top: 0;
   z-index: 100;
-  background: rgba(6, 8, 15, 0.85);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  background: var(--bg-surface);
+  border-bottom: 1px solid var(--border-bright);
   padding: 0 24px;
 }
 
@@ -33,10 +32,7 @@
   font-family: 'Space Grotesk', sans-serif;
   font-size: 22px;
   font-weight: 700;
-  background: linear-gradient(135deg, var(--neon), var(--accent2));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: var(--neon);
   letter-spacing: -0.5px;
 }
 
@@ -65,14 +61,7 @@
 }
 
 .borderGlow {
-  height: 1px;
-  background: linear-gradient(90deg,
-    transparent 0%,
-    rgba(0, 200, 255, 0.08) 10%,
-    rgba(0, 200, 255, 0.3) 50%,
-    rgba(0, 200, 255, 0.08) 90%,
-    transparent 100%
-  );
+  display: none;
 }
 
 @media (max-width: 640px) {

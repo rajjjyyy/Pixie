@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import styles from './ResultPanel.module.css'
 
-const CHECKER_BG = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16'%3E%3Crect width='8' height='8' fill='%23141e30'/%3E%3Crect x='8' y='8' width='8' height='8' fill='%23141e30'/%3E%3Crect x='8' y='0' width='8' height='8' fill='%231a2744'/%3E%3Crect x='0' y='8' width='8' height='8' fill='%231a2744'/%3E%3C/svg%3E")`
+const CHECKER_BG = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16'%3E%3Crect width='8' height='8' fill='%230A0F2C'/%3E%3Crect x='8' y='8' width='8' height='8' fill='%230A0F2C'/%3E%3Crect x='8' y='0' width='8' height='8' fill='%23101640'/%3E%3Crect x='0' y='8' width='8' height='8' fill='%23101640'/%3E%3C/svg%3E")`
 
 export default function ResultPanel({ originalURL, resultURL, status, onDownload }) {
   const [view, setView] = useState('split') // 'split' | 'original' | 'result'
@@ -63,13 +63,15 @@ export default function ResultPanel({ originalURL, resultURL, status, onDownload
         {/* Processing overlay */}
         {status === 'processing' && (
           <div className={styles.processingOverlay}>
-            <div className={styles.pulseRing} />
-            <div className={styles.pulseRing} style={{ animationDelay: '0.4s' }} />
-            <div className={styles.pulseRing} style={{ animationDelay: '0.8s' }} />
-            <div className={styles.processingIcon}>
-              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
-              </svg>
+            <div className={styles.iconGroup}>
+              <div className={styles.pulseRing} />
+              <div className={styles.pulseRing} style={{ animationDelay: '0.8s' }} />
+              <div className={styles.pulseRing} style={{ animationDelay: '1.6s' }} />
+              <div className={styles.processingIcon}>
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                  <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+                </svg>
+              </div>
             </div>
             <p className={styles.processingText}>Removing background…</p>
             <p className={styles.processingSubtext}>This may take a few seconds on first run</p>

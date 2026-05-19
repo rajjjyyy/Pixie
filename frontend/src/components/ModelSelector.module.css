@@ -40,7 +40,7 @@
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(135deg, var(--neon-glow-soft) 0%, transparent 60%);
+  background: var(--neon-glow-soft);
   opacity: 0;
   transition: opacity var(--transition);
 }
@@ -54,9 +54,8 @@
 .card:hover:not(:disabled)::before { opacity: 1; }
 
 .selected {
-  border-color: var(--neon) !important;
-  background: rgba(0, 200, 255, 0.04) !important;
-  box-shadow: 0 0 0 1px rgba(0,200,255,0.15), 0 4px 20px rgba(0,0,0,0.4) !important;
+  border-color: var(--accent2) !important;
+  background: rgba(61, 125, 202, 0.05) !important;
 }
 
 .selected::before { opacity: 1 !important; }
@@ -91,7 +90,7 @@
 
 .iconActive {
   background: var(--neon-glow-soft) !important;
-  border-color: rgba(0,200,255,0.3) !important;
+  border-color: var(--border-bright) !important;
   color: var(--neon) !important;
 }
 
@@ -124,14 +123,14 @@
 
 .badge_bria {
   color: var(--neon);
-  background: rgba(0, 200, 255, 0.1);
-  border-color: rgba(0, 200, 255, 0.25);
+  background: var(--neon-glow-soft);
+  border-color: var(--border-bright);
 }
 
 .badge_rembg {
   color: var(--success);
-  background: rgba(0, 229, 153, 0.1);
-  border-color: rgba(0, 229, 153, 0.25);
+  background: rgba(34, 197, 94, 0.08);
+  border-color: rgba(34, 197, 94, 0.25);
 }
 
 /* ── Radio ── */
@@ -149,18 +148,17 @@
 }
 
 .selected .radio {
-  border-color: var(--neon);
+  border-color: var(--accent2);
 }
 
 .radioDot {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: var(--neon);
+  background: var(--accent2);
   opacity: 0;
   transform: scale(0.5);
   transition: opacity var(--transition), transform var(--transition);
-  box-shadow: 0 0 8px var(--neon-glow);
 }
 
 .selected .radioDot {

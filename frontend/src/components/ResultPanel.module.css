@@ -59,7 +59,7 @@
 .tabActive {
   background: var(--neon-glow-soft) !important;
   color: var(--neon) !important;
-  border: 1px solid rgba(0, 200, 255, 0.25);
+  border: 1px solid var(--border-bright);
 }
 
 /* ── Download button ── */
@@ -69,19 +69,18 @@
   gap: 7px;
   padding: 7px 16px;
   border-radius: var(--radius-sm);
-  border: 1.5px solid var(--neon);
-  background: var(--neon-glow-soft);
-  color: var(--neon);
+  border: 1.5px solid var(--accent2);
+  background: rgba(61, 125, 202, 0.10);
+  color: var(--accent2);
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
   font-family: 'Space Grotesk', sans-serif;
-  transition: background var(--transition), box-shadow var(--transition), transform var(--transition);
+  transition: background var(--transition), transform var(--transition);
 }
 
 .downloadBtn:hover {
-  background: rgba(0, 200, 255, 0.18);
-  box-shadow: 0 0 16px rgba(0, 200, 255, 0.25);
+  background: rgba(61, 125, 202, 0.20);
   transform: translateY(-1px);
 }
 
@@ -142,8 +141,19 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 14px;
+  gap: 20px;
   background: var(--bg-card);
+}
+
+/* Groups the icon + all rings so rings are centred on the icon */
+.iconGroup {
+  position: relative;
+  width: 72px;
+  height: 72px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
 }
 
 .processingIcon {
@@ -151,24 +161,18 @@
   height: 72px;
   border-radius: 50%;
   background: var(--neon-glow-soft);
-  border: 1.5px solid rgba(0, 200, 255, 0.3);
+  border: 1.5px solid var(--border-bright);
   display: flex;
   align-items: center;
   justify-content: center;
   color: var(--neon);
+  position: relative;
   z-index: 1;
-  animation: pulse-icon 1.4s ease-in-out infinite;
-}
-
-@keyframes pulse-icon {
-  0%, 100% { box-shadow: 0 0 0 0 var(--neon-glow); }
-  50%       { box-shadow: 0 0 20px 8px var(--neon-glow); }
 }
 
 .pulseRing {
   position: absolute;
-  width: 80px;
-  height: 80px;
+  inset: 0;
   border-radius: 50%;
   border: 1.5px solid var(--neon);
   opacity: 0;
@@ -176,8 +180,8 @@
 }
 
 @keyframes pulse-expand {
-  0%   { transform: scale(0.8); opacity: 0.5; }
-  100% { transform: scale(3);   opacity: 0; }
+  0%   { transform: scale(0.9); opacity: 0.6; }
+  100% { transform: scale(2.8); opacity: 0; }
 }
 
 .processingText {
@@ -230,11 +234,11 @@
   text-transform: uppercase;
   letter-spacing: 1px;
   color: var(--text-secondary);
-  background: rgba(6, 8, 15, 0.75);
-  backdrop-filter: blur(8px);
+  background: var(--bg-surface);
   border: 1px solid var(--border);
   border-radius: 4px;
   padding: 3px 9px;
+  z-index: 2;
 }
 
 .paneImg {
@@ -278,7 +282,7 @@
 .spinnerLg {
   width: 36px;
   height: 36px;
-  border: 3px solid rgba(0, 200, 255, 0.15);
+  border: 3px solid var(--border);
   border-top-color: var(--neon);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
