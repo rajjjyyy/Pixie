@@ -1,0 +1,80 @@
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(6, 8, 15, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  padding: 0 24px;
+}
+
+.inner {
+  max-width: 1320px;
+  margin: 0 auto;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.wordmark {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 22px;
+  font-weight: 700;
+  background: linear-gradient(135deg, var(--neon), var(--accent2));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: -0.5px;
+}
+
+.badge {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  color: var(--neon);
+  background: var(--neon-glow-soft);
+  border: 1px solid rgba(0, 200, 255, 0.25);
+  border-radius: 4px;
+  padding: 2px 7px;
+}
+
+.nav {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.tagline {
+  font-size: 12.5px;
+  color: var(--text-secondary);
+  letter-spacing: 0.2px;
+}
+
+.borderGlow {
+  height: 1px;
+  background: linear-gradient(90deg,
+    transparent 0%,
+    rgba(0, 200, 255, 0.08) 10%,
+    rgba(0, 200, 255, 0.3) 50%,
+    rgba(0, 200, 255, 0.08) 90%,
+    transparent 100%
+  );
+}
+
+@media (max-width: 640px) {
+  .tagline { display: none; }
+}

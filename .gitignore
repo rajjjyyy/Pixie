@@ -1,0 +1,47 @@
+# ── Python ──────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Virtual environments
+backend/.venv/
+.venv/
+venv/
+env/
+
+# HuggingFace model cache (large binary files)
+backend/.cache/
+~/.cache/huggingface/
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
+backend/.env
+
+# ── Node / React ─────────────────────────────────
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+
+# ── OS ──────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ── Editor ──────────────────────────────────────
+.vscode/settings.json
+.idea/
+*.suo
+*.user
+
+# ── Misc ─────────────────────────────────────────
+*.log
+*.tmp

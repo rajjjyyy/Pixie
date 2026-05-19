@@ -1,0 +1,82 @@
+/* ──────────────────────────────────────────────
+   Pixie — Global Styles
+   Dark / Neon-Blue Theme
+   ────────────────────────────────────────────── */
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --bg-base:        #06080f;
+  --bg-surface:     #0c1120;
+  --bg-card:        #0f1629;
+  --bg-card-hover:  #131d35;
+  --border:         #1c2d52;
+  --border-bright:  #2a4480;
+
+  --neon:           #00c8ff;
+  --neon-dim:       #0096cc;
+  --neon-glow:      rgba(0, 200, 255, 0.35);
+  --neon-glow-soft: rgba(0, 200, 255, 0.12);
+
+  --accent2:        #5b6af0;
+  --accent2-glow:   rgba(91, 106, 240, 0.3);
+
+  --text-primary:   #ddeeff;
+  --text-secondary: #6a8cae;
+  --text-muted:     #3a5570;
+
+  --success:        #00e599;
+  --error:          #ff4d6d;
+  --warning:        #ffb347;
+
+  --radius-sm:  6px;
+  --radius-md:  12px;
+  --radius-lg:  18px;
+  --radius-xl:  24px;
+
+  --transition: 0.2s ease;
+}
+
+html, body, #root {
+  height: 100%;
+}
+
+body {
+  background-color: var(--bg-base);
+  color: var(--text-primary);
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 15px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  background-image:
+    radial-gradient(ellipse 80% 60% at 50% -10%, rgba(0, 200, 255, 0.07) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 40% at 80% 90%,  rgba(91, 106, 240, 0.06) 0%, transparent 55%);
+  background-attachment: fixed;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--bg-surface); }
+::-webkit-scrollbar-thumb { background: var(--border-bright); border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: var(--neon-dim); }
+
+/* Selection */
+::selection { background: var(--neon-glow); color: var(--neon); }
+
+/* Focus ring */
+:focus-visible {
+  outline: 2px solid var(--neon);
+  outline-offset: 3px;
+  border-radius: var(--radius-sm);
+}
+
+/* Utility */
+.sr-only {
+  position: absolute; width: 1px; height: 1px;
+  padding: 0; margin: -1px; overflow: hidden;
+  clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+}
