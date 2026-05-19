@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import styles from './ResultPanel.module.css'
 
 const CHECKER_BG = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16'%3E%3Crect width='8' height='8' fill='%23141e30'/%3E%3Crect x='8' y='8' width='8' height='8' fill='%23141e30'/%3E%3Crect x='8' y='0' width='8' height='8' fill='%231a2744'/%3E%3Crect x='0' y='8' width='8' height='8' fill='%231a2744'/%3E%3C/svg%3E")`
@@ -99,11 +99,54 @@ export default function ResultPanel({ originalURL, resultURL, status, onDownload
 }
 
 function ImagePane({ label, src, showChecker, fill }) {
+  const [zoom, setZoom] = useState({ scale: 1, tx: 0, ty: 0 })
+  const containerRef = useRef(null)
+
+  // Reset zoom whenever a new image is loaded
+  useEffect(() => {
+    setZoom({ scale: 1, tx: 0, ty: 0 })
+  }, [src])
+
+  // Non-passive wheel listener so we can call preventDefault
+  useEffect(() => {
+    const el = containerRef.current
+    if (!el) return
+    const onWheel = (e) => {
+      e.preventDefault()
+      const rect = el.getBoundingClientRect()
+      const cx = e.clientX - rect.left
+      const cy = e.clientY - rect.top
+      setZoom(prev => {
+        const factor = e.deltaY < 0 ? 1.1 : 1 / 1.1
+        const newScale = Math.min(Math.max(prev.scale * factor, 0.25), 10)
+        const ratio = newScale / prev.scale
+        return {
+          scale: newScale,
+          tx: cx - (cx - prev.tx) * ratio,
+          ty: cy - (cy - prev.ty) * ratio,
+        }
+      })
+    }
+    el.addEventListener('wheel', onWheel, { passive: false })
+    return () => el.removeEventListener('wheel', onWheel)
+  }, [])
+
   return (
-    <div className={[styles.pane, fill ? styles.paneFill : ''].join(' ')}
-         style={showChecker ? { backgroundImage: CHECKER_BG, backgroundSize: '16px 16px' } : {}}>
+    <div
+      ref={containerRef}
+      className={[styles.pane, fill ? styles.paneFill : ''].join(' ')}
+      style={showChecker ? { backgroundImage: CHECKER_BG, backgroundSize: '16px 16px' } : {}}
+    >
       <span className={styles.paneLabel}>{label}</span>
-      <img src={src} alt={label} className={styles.paneImg} />
+      <div
+        className={styles.zoomWrapper}
+        style={{
+          transform: `translate(${zoom.tx}px, ${zoom.ty}px) scale(${zoom.scale})`,
+          transformOrigin: '0 0',
+        }}
+      >
+        <img src={src} alt={label} className={styles.paneImg} />
+      </div>
     </div>
   )
 }
