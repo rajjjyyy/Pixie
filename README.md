@@ -30,38 +30,87 @@ Built with a **React** frontend (dark / neon-blue theme) and a **Python FastAPI*
 
 ---
 
-## Quick Start
+## Running Pixie
 
-### 1 — Install dependencies
+### Step 1 — Install dependencies (first time only)
 
-Double-click **`install.bat`** (or run it from a terminal). This will:
+Double-click **`install.bat`** and wait for it to finish. This will:
 
-- Create a Python virtual environment in `backend/.venv`
+- Create a Python virtual environment at `backend/.venv`
 - Install all Python packages (PyTorch, transformers, rembg, FastAPI …)
 - Run `npm install` for the React frontend
 
-> **GPU users:** Before running `install.bat`, install the CUDA-enabled build of PyTorch from [pytorch.org](https://pytorch.org/get-started/locally/). The CPU build is installed by default.
-
-### 2 — Launch
-
-Double-click **`start.bat`**. It will:
-
-1. Start the Python backend on `http://localhost:8000`
-2. Start the React frontend on `http://localhost:5173`
-3. Open your browser automatically
+> **GPU users:** Before running `install.bat`, install the CUDA-enabled PyTorch build from [pytorch.org](https://pytorch.org/get-started/locally/). The CPU build is used by default.
 
 ---
 
-## Manual Start (PowerShell)
+### Step 2 — Start both servers
+
+Double-click **`start.bat`**. Two terminal windows open automatically:
+
+| Window title | What runs inside |
+|---|---|
+| **Pixie Backend** | `uvicorn` on `http://localhost:8000` |
+| **Pixie Frontend** | Vite dev server on `http://localhost:5173` |
+
+Your browser opens at `http://localhost:5173` after a few seconds.
+
+> **First run note:** On the very first request with each AI model, the weights are downloaded automatically (RMBG-1.4 ≈ 100 MB, U²-Net ≈ 176 MB). Subsequent starts use the cached weights and are instant.
+
+---
+
+### Step 3 — Stop both servers completely
+
+Closing the browser tab does **not** stop the servers — they keep running in the background and hold ports 8000 and 5173. Follow these steps to shut down cleanly:
+
+#### Option A — Close the terminal windows (recommended)
+
+1. Find the **Pixie Backend** terminal window in the taskbar
+2. Press **Ctrl + C** inside it — wait for `Shutting down.` to appear
+3. Close that window
+4. Find the **Pixie Frontend** terminal window
+5. Press **Ctrl + C** inside it — wait for `VITE vX.X.X` to disappear
+6. Close that window
+
+#### Option B — Kill by port from PowerShell (if windows are gone)
+
+Open PowerShell and run:
 
 ```powershell
-# Terminal 1 — backend
-C:\...\Pixie\backend\.venv\Scripts\uvicorn.exe app:app --host 127.0.0.1 --port 8000 --app-dir C:\...\Pixie\backend
+# Stop the backend (port 8000)
+Stop-Process -Id (Get-NetTCPConnection -LocalPort 8000 -ErrorAction SilentlyContinue).OwningProcess -Force -ErrorAction SilentlyContinue
 
-# Terminal 2 — frontend
-cd C:\...\Pixie\frontend
+# Stop the frontend (port 5173)
+Stop-Process -Id (Get-NetTCPConnection -LocalPort 5173 -ErrorAction SilentlyContinue).OwningProcess -Force -ErrorAction SilentlyContinue
+```
+
+#### Verify nothing is still running
+
+```powershell
+# Should return nothing if both ports are free
+Get-NetTCPConnection -LocalPort 8000, 5173 -ErrorAction SilentlyContinue
+```
+
+---
+
+### Manual Start (PowerShell — without start.bat)
+
+Open **two separate PowerShell windows**:
+
+```powershell
+# Window 1 — backend
+C:\Users\rajef\Pixie\backend\.venv\Scripts\uvicorn.exe app:app --host 127.0.0.1 --port 8000 --app-dir C:\Users\rajef\Pixie\backend
+```
+
+```powershell
+# Window 2 — frontend
+cd C:\Users\rajef\Pixie\frontend
 npm run dev
 ```
+
+Then open `http://localhost:5173` in your browser.
+
+> **Important:** Always use two separate windows — not `;` on one line. Each server must stay in the foreground of its own window so Ctrl + C works correctly.
 
 ---
 
@@ -141,6 +190,122 @@ Pixie/
 | `model` | string | `bria` (default) · `rembg` |
 
 Returns: `image/png` with transparent background.
+
+---
+
+## Troubleshooting
+
+### "Backend offline" banner appears in the UI
+
+The frontend loaded but cannot reach the Python server.
+
+**Step-by-step fix:**
+
+1. Check whether uvicorn is running:
+   ```powershell
+   Get-NetTCPConnection -LocalPort 8000 -ErrorAction SilentlyContinue
+   ```
+2. If nothing is returned, the backend is not running. Start it:
+   ```powershell
+   C:\Users\rajef\Pixie\backend\.venv\Scripts\uvicorn.exe app:app --host 127.0.0.1 --port 8000 --app-dir C:\Users\rajef\Pixie\backend
+   ```
+3. If port 8000 is in use by a different process, kill it first:
+   ```powershell
+   Stop-Process -Id (Get-NetTCPConnection -LocalPort 8000).OwningProcess -Force
+   ```
+4. Refresh the browser — the banner should disappear within a few seconds.
+
+---
+
+### "Network Error" when clicking Remove Background
+
+This means the HTTP request to the backend failed. Common causes:
+
+| Cause | Fix |
+|---|---|
+| Backend not running | Follow the "Backend offline" steps above |
+| Port 8000 blocked by firewall | Allow it: `netsh advfirewall firewall add rule name="Pixie" dir=in action=allow protocol=TCP localport=8000` |
+| Wrong port in Vite proxy | Check `frontend/vite.config.js` — target must be `http://localhost:8000` |
+
+---
+
+### "rembg — No onnxruntime backend found"
+
+The rembg package was installed without its ONNX runtime dependency.
+
+```powershell
+C:\Users\rajef\Pixie\backend\.venv\Scripts\pip.exe install "rembg[cpu]"
+```
+
+Use `rembg[gpu]` instead if you have an NVIDIA GPU with CUDA.
+
+---
+
+### 401 — "You are trying to access a gated repo" (BRIA RMBG-2.0)
+
+`briaai/RMBG-2.0` requires accepting a commercial licence before it can be downloaded. The default model is already set to the open-access **RMBG-1.4**, so this error only appears if you manually set `MODEL_ID` back to RMBG-2.0.
+
+**To use RMBG-2.0 legitimately:**
+
+1. Create a free account at [huggingface.co](https://huggingface.co)
+2. Go to [huggingface.co/briaai/RMBG-2.0](https://huggingface.co/briaai/RMBG-2.0) and click **Agree and access repository**
+3. Go to [huggingface.co/settings/tokens](https://huggingface.co/settings/tokens) → **New token** (type: Read)
+4. Create `backend/.env` (this file is git-ignored):
+   ```env
+   HF_TOKEN=hf_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+   ```
+5. Restart the backend — it will now load RMBG-2.0 automatically
+
+---
+
+### Code changes not taking effect after editing Python files
+
+Python is loaded once at startup. File changes on disk are ignored by a running server **unless** `--reload` is active.
+
+**Step-by-step restart:**
+
+1. Find the **Pixie Backend** terminal window
+2. Press **Ctrl + C** — wait for the prompt to return
+3. Press the **Up arrow** to recall the last command and press **Enter**
+
+Or kill and relaunch from PowerShell:
+```powershell
+# Kill the old process
+Stop-Process -Id (Get-NetTCPConnection -LocalPort 8000).OwningProcess -Force
+
+# Start fresh
+C:\Users\rajef\Pixie\backend\.venv\Scripts\uvicorn.exe app:app --host 127.0.0.1 --port 8000 --app-dir C:\Users\rajef\Pixie\backend
+```
+
+---
+
+### Port already in use on startup
+
+```
+ERROR: [Errno 10048] error while attempting to bind on address ('127.0.0.1', 8000)
+```
+
+A previous server session was not closed cleanly.
+
+```powershell
+# Find and kill whatever is holding port 8000
+Stop-Process -Id (Get-NetTCPConnection -LocalPort 8000).OwningProcess -Force
+
+# Same for the frontend port if needed
+Stop-Process -Id (Get-NetTCPConnection -LocalPort 5173).OwningProcess -Force
+```
+
+---
+
+### Virtual environment not found (start.bat error)
+
+`install.bat` was not run, or the venv was deleted.
+
+```powershell
+cd C:\Users\rajef\Pixie\backend
+python -m venv .venv
+.\.venv\Scripts\pip.exe install -r requirements.txt
+```
 
 ---
 
