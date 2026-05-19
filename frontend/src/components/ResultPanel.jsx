@@ -100,6 +100,9 @@ export default function ResultPanel({ originalURL, resultURL, status, onDownload
 
 function ImagePane({ label, src, showChecker, fill }) {
   const [zoom, setZoom] = useState({ scale: 1, tx: 0, ty: 0 })
+  const [panning, setPanning] = useState(false)
+  const isPanning = useRef(false)
+  const panOrigin = useRef({ x: 0, y: 0 })
   const containerRef = useRef(null)
 
   // Reset zoom whenever a new image is loaded
@@ -107,10 +110,10 @@ function ImagePane({ label, src, showChecker, fill }) {
     setZoom({ scale: 1, tx: 0, ty: 0 })
   }, [src])
 
-  // Non-passive wheel listener so we can call preventDefault
   useEffect(() => {
     const el = containerRef.current
     if (!el) return
+
     const onWheel = (e) => {
       e.preventDefault()
       const rect = el.getBoundingClientRect()
@@ -127,15 +130,53 @@ function ImagePane({ label, src, showChecker, fill }) {
         }
       })
     }
+
+    const onMouseDown = (e) => {
+      if (e.button !== 1) return
+      e.preventDefault()
+      isPanning.current = true
+      panOrigin.current = { x: e.clientX, y: e.clientY }
+      setPanning(true)
+    }
+
+    const onMouseMove = (e) => {
+      if (!isPanning.current) return
+      const dx = e.clientX - panOrigin.current.x
+      const dy = e.clientY - panOrigin.current.y
+      panOrigin.current = { x: e.clientX, y: e.clientY }
+      setZoom(prev => ({ ...prev, tx: prev.tx + dx, ty: prev.ty + dy }))
+    }
+
+    const stopPan = (e) => {
+      if (e && e.type === 'mouseup' && e.button !== 1) return
+      isPanning.current = false
+      setPanning(false)
+    }
+
     el.addEventListener('wheel', onWheel, { passive: false })
-    return () => el.removeEventListener('wheel', onWheel)
+    el.addEventListener('mousedown', onMouseDown)
+    el.addEventListener('mousemove', onMouseMove)
+    el.addEventListener('mouseup', stopPan)
+    el.addEventListener('mouseleave', stopPan)
+
+    return () => {
+      el.removeEventListener('wheel', onWheel)
+      el.removeEventListener('mousedown', onMouseDown)
+      el.removeEventListener('mousemove', onMouseMove)
+      el.removeEventListener('mouseup', stopPan)
+      el.removeEventListener('mouseleave', stopPan)
+    }
   }, [])
 
   return (
     <div
       ref={containerRef}
       className={[styles.pane, fill ? styles.paneFill : ''].join(' ')}
-      style={showChecker ? { backgroundImage: CHECKER_BG, backgroundSize: '16px 16px' } : {}}
+      style={{
+        ...(showChecker ? { backgroundImage: CHECKER_BG, backgroundSize: '16px 16px' } : {}),
+        cursor: panning ? 'grabbing' : 'default',
+        userSelect: 'none',
+      }}
     >
       <span className={styles.paneLabel}>{label}</span>
       <div
@@ -145,7 +186,7 @@ function ImagePane({ label, src, showChecker, fill }) {
           transformOrigin: '0 0',
         }}
       >
-        <img src={src} alt={label} className={styles.paneImg} />
+        <img src={src} alt={label} className={styles.paneImg} draggable={false} />
       </div>
     </div>
   )
