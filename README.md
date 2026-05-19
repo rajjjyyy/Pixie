@@ -19,7 +19,9 @@ Built with a **React** frontend (dark / neon-blue theme) and a **Python FastAPI*
 
 ---
 
-## Prerequisites
+## Installation Guide
+
+### Prerequisites
 
 | Tool | Minimum version |
 |------|----------------|
@@ -28,11 +30,7 @@ Built with a **React** frontend (dark / neon-blue theme) and a **Python FastAPI*
 | npm | 8 |
 | Git | any |
 
----
-
-## Running Pixie
-
-### Step 1 — Install dependencies (first time only)
+### Install dependencies
 
 Double-click **`install.bat`** and wait for it to finish. This will:
 
@@ -42,9 +40,11 @@ Double-click **`install.bat`** and wait for it to finish. This will:
 
 > **GPU users:** Before running `install.bat`, install the CUDA-enabled PyTorch build from [pytorch.org](https://pytorch.org/get-started/locally/). The CPU build is used by default.
 
+You only need to do this once. Skip it on future launches unless you delete the `backend/.venv` folder or `frontend/node_modules`.
+
 ---
 
-### Step 2 — Start both servers
+## Run Guide
 
 Double-click **`start.bat`**. Two terminal windows open automatically:
 
@@ -57,13 +57,32 @@ Your browser opens at `http://localhost:5173` after a few seconds.
 
 > **First run note:** On the very first request with each AI model, the weights are downloaded automatically (RMBG-1.4 ≈ 100 MB, U²-Net ≈ 176 MB). Subsequent starts use the cached weights and are instant.
 
+### Manual start (PowerShell — without start.bat)
+
+Open **two separate PowerShell windows**:
+
+```powershell
+# Window 1 — backend
+C:\Users\XXXXX\Pixie\backend\.venv\Scripts\uvicorn.exe app:app --host 127.0.0.1 --port 8000 --app-dir C:\Users\XXXXX\Pixie\backend
+```
+
+```powershell
+# Window 2 — frontend
+cd C:\Users\XXXXX\Pixie\frontend
+npm run dev
+```
+
+Then open `http://localhost:5173` in your browser.
+
+> **Important:** Always use two separate windows — not `;` on one line. Each server must stay in the foreground of its own window so Ctrl + C works correctly.
+
 ---
 
-### Step 3 — Stop both servers completely
+## Closing Guide
 
-Closing the browser tab does **not** stop the servers — they keep running in the background and hold ports 8000 and 5173. Follow these steps to shut down cleanly:
+Closing the browser tab does **not** stop the servers — they keep running in the background and hold ports 8000 and 5173. Follow these steps to shut down cleanly.
 
-#### Option A — Close the terminal windows (recommended)
+### Option A — Close the terminal windows (recommended)
 
 1. Find the **Pixie Backend** terminal window in the taskbar
 2. Press **Ctrl + C** inside it — wait for `Shutting down.` to appear
@@ -72,7 +91,7 @@ Closing the browser tab does **not** stop the servers — they keep running in t
 5. Press **Ctrl + C** inside it — wait for `VITE vX.X.X` to disappear
 6. Close that window
 
-#### Option B — Kill by port from PowerShell (if windows are gone)
+### Option B — Kill by port from PowerShell (if windows are gone)
 
 Open PowerShell and run:
 
@@ -84,33 +103,12 @@ Stop-Process -Id (Get-NetTCPConnection -LocalPort 8000 -ErrorAction SilentlyCont
 Stop-Process -Id (Get-NetTCPConnection -LocalPort 5173 -ErrorAction SilentlyContinue).OwningProcess -Force -ErrorAction SilentlyContinue
 ```
 
-#### Verify nothing is still running
+### Verify nothing is still running
 
 ```powershell
 # Should return nothing if both ports are free
 Get-NetTCPConnection -LocalPort 8000, 5173 -ErrorAction SilentlyContinue
 ```
-
----
-
-### Manual Start (PowerShell — without start.bat)
-
-Open **two separate PowerShell windows**:
-
-```powershell
-# Window 1 — backend
-C:\Users\rajef\Pixie\backend\.venv\Scripts\uvicorn.exe app:app --host 127.0.0.1 --port 8000 --app-dir C:\Users\rajef\Pixie\backend
-```
-
-```powershell
-# Window 2 — frontend
-cd C:\Users\rajef\Pixie\frontend
-npm run dev
-```
-
-Then open `http://localhost:5173` in your browser.
-
-> **Important:** Always use two separate windows — not `;` on one line. Each server must stay in the foreground of its own window so Ctrl + C works correctly.
 
 ---
 
@@ -207,7 +205,7 @@ The frontend loaded but cannot reach the Python server.
    ```
 2. If nothing is returned, the backend is not running. Start it:
    ```powershell
-   C:\Users\rajef\Pixie\backend\.venv\Scripts\uvicorn.exe app:app --host 127.0.0.1 --port 8000 --app-dir C:\Users\rajef\Pixie\backend
+   C:\Users\XXXXX\Pixie\backend\.venv\Scripts\uvicorn.exe app:app --host 127.0.0.1 --port 8000 --app-dir C:\Users\XXXXX\Pixie\backend
    ```
 3. If port 8000 is in use by a different process, kill it first:
    ```powershell
@@ -234,7 +232,7 @@ This means the HTTP request to the backend failed. Common causes:
 The rembg package was installed without its ONNX runtime dependency.
 
 ```powershell
-C:\Users\rajef\Pixie\backend\.venv\Scripts\pip.exe install "rembg[cpu]"
+C:\Users\XXXXX\Pixie\backend\.venv\Scripts\pip.exe install "rembg[cpu]"
 ```
 
 Use `rembg[gpu]` instead if you have an NVIDIA GPU with CUDA.
@@ -274,7 +272,7 @@ Or kill and relaunch from PowerShell:
 Stop-Process -Id (Get-NetTCPConnection -LocalPort 8000).OwningProcess -Force
 
 # Start fresh
-C:\Users\rajef\Pixie\backend\.venv\Scripts\uvicorn.exe app:app --host 127.0.0.1 --port 8000 --app-dir C:\Users\rajef\Pixie\backend
+C:\Users\XXXXX\Pixie\backend\.venv\Scripts\uvicorn.exe app:app --host 127.0.0.1 --port 8000 --app-dir C:\Users\XXXXX\Pixie\backend
 ```
 
 ---
@@ -302,7 +300,7 @@ Stop-Process -Id (Get-NetTCPConnection -LocalPort 5173).OwningProcess -Force
 `install.bat` was not run, or the venv was deleted.
 
 ```powershell
-cd C:\Users\rajef\Pixie\backend
+cd C:\Users\XXXXX\Pixie\backend
 python -m venv .venv
 .\.venv\Scripts\pip.exe install -r requirements.txt
 ```
