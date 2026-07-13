@@ -5,15 +5,28 @@ FastAPI server exposing POST /api/remove-background
 
 from __future__ import annotations
 
+import atexit
 import io
 import logging
+import os
 from contextlib import asynccontextmanager
 
+from dotenv import load_dotenv
 from fastapi import FastAPI, File, Form, UploadFile, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response
+from posthog import Posthog
 
 from remover import BiRefNetRemover, RembgRemover
+
+load_dotenv()
+
+posthog_client = Posthog(
+    os.getenv("POSTHOG_PROJECT_TOKEN", ""),
+    host=os.getenv("POSTHOG_HOST", "https://us.i.posthog.com"),
+    enable_exception_autocapture=True,
+)
+atexit.register(posthog_client.shutdown)
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 log = logging.getLogger("pixie")
@@ -34,6 +47,7 @@ async def lifespan(app: FastAPI):
     _birefnet = BiRefNetRemover()
     yield
     log.info("Shutting down.")
+    posthog_client.flush()
 
 
 app = FastAPI(title="Pixie Background Remover", lifespan=lifespan)
@@ -64,16 +78,37 @@ async def remove_background(
 
     # ── Validate content type
     if file.content_type and not file.content_type.startswith("image/"):
+        posthog_client.capture(
+            "anonymous",
+            "invalid_file_uploaded",
+            properties={"reason": "invalid_content_type", "status_code": 400, "$process_person_profile": False},
+        )
         raise HTTPException(status_code=400, detail="Uploaded file is not an image.")
 
     raw = await file.read()
     if len(raw) == 0:
+        posthog_client.capture(
+            "anonymous",
+            "invalid_file_uploaded",
+            properties={"reason": "empty_file", "status_code": 400, "$process_person_profile": False},
+        )
         raise HTTPException(status_code=400, detail="Uploaded file is empty.")
     if len(raw) > 20 * 1024 * 1024:
+        posthog_client.capture(
+            "anonymous",
+            "invalid_file_uploaded",
+            properties={"reason": "file_too_large", "file_size_bytes": len(raw), "status_code": 413, "$process_person_profile": False},
+        )
         raise HTTPException(status_code=413, detail="File exceeds 20 MB limit.")
 
     model = model.strip().lower()
     log.info("Processing '%s' with model='%s' (%d bytes)", file.filename, model, len(raw))
+
+    posthog_client.capture(
+        "anonymous",
+        "background_removal_requested",
+        properties={"model": model, "file_size_bytes": len(raw), "$process_person_profile": False},
+    )
 
     try:
         if model == "bria":
@@ -93,7 +128,18 @@ async def remove_background(
         raise
     except Exception as exc:
         log.exception("Background removal failed")
+        posthog_client.capture(
+            "anonymous",
+            "background_removal_failed",
+            properties={"model": model, "file_size_bytes": len(raw), "error_type": type(exc).__name__, "$process_person_profile": False},
+        )
         raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+    posthog_client.capture(
+        "anonymous",
+        "background_removal_succeeded",
+        properties={"model": model, "file_size_bytes": len(raw), "output_size_bytes": len(png_bytes), "$process_person_profile": False},
+    )
 
     return Response(
         content=png_bytes,
