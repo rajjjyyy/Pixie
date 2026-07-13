@@ -22,10 +22,12 @@ Why not BRIA RMBG-1.4 / RMBG-2.0?
 
 from __future__ import annotations
 
+import colorsys
 import io
 import logging
 from typing import cast
 
+import numpy as np
 from PIL import Image
 
 log = logging.getLogger("pixie.remover")
@@ -94,3 +96,48 @@ class RembgRemover:
         buf = io.BytesIO()
         result.save(buf, format="PNG", optimize=False)
         return buf.getvalue()
+
+
+def isolate_color_range(
+    image_bytes: bytes,
+    intensity: float = 0.5,
+    selected_color: tuple[int, int, int] | None = None,
+) -> bytes:
+    """
+    Remove pixels whose hue is close to the selected color (or the dominant
+    color if none was provided). The intensity parameter controls how wide the
+    hue window is.
+    """
+
+    img = Image.open(io.BytesIO(image_bytes)).convert("RGBA")
+    rgba = np.array(img, dtype=np.uint8)
+
+    alpha = rgba[..., 3]
+    visible = alpha > 0
+    if not np.any(visible):
+        return image_bytes
+
+    hsv_img = img.convert("HSV")
+    hsv = np.array(hsv_img, dtype=np.uint8)
+    hue = hsv[..., 0].astype(np.float32) / 255.0
+    saturation = hsv[..., 1].astype(np.float32) / 255.0
+
+    if selected_color is not None:
+        r, g, b = selected_color
+        target_hue = colorsys.rgb_to_hsv(r / 255.0, g / 255.0, b / 255.0)[0]
+    else:
+        target_hue = float(np.median(hue[visible]))
+
+    normalized_intensity = max(0.0, min(1.0, float(intensity)))
+    width = 0.02 + (normalized_intensity * 0.24)
+
+    hue_diff = np.abs((hue - target_hue + 0.5) % 1.0 - 0.5)
+    remove_mask = visible & (hue_diff <= width) & (saturation > 0.05)
+
+    result = rgba.copy()
+    result[..., 3] = np.where(remove_mask, 0, alpha).astype(np.uint8)
+
+    output = Image.fromarray(result, mode="RGBA")
+    buf = io.BytesIO()
+    output.save(buf, format="PNG", optimize=False)
+    return buf.getvalue()

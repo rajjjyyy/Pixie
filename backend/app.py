@@ -13,7 +13,7 @@ from fastapi import FastAPI, File, Form, UploadFile, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response
 
-from remover import BiRefNetRemover, RembgRemover
+from remover import BiRefNetRemover, RembgRemover, isolate_color_range
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 log = logging.getLogger("pixie")
@@ -99,4 +99,43 @@ async def remove_background(
         content=png_bytes,
         media_type="image/png",
         headers={"Content-Disposition": 'inline; filename="result.png"'},
+    )
+
+
+@app.post("/api/isolate-color-range")
+async def isolate_color_range_endpoint(
+    file: UploadFile = File(...),
+    intensity: float = Form(0.5),
+    color: str | None = Form(None),
+):
+    if file.content_type and not file.content_type.startswith("image/"):
+        raise HTTPException(status_code=400, detail="Uploaded file is not an image.")
+
+    raw = await file.read()
+    if len(raw) == 0:
+        raise HTTPException(status_code=400, detail="Uploaded file is empty.")
+    if len(raw) > 20 * 1024 * 1024:
+        raise HTTPException(status_code=413, detail="File exceeds 20 MB limit.")
+
+    selected_color = None
+    if color:
+        color = color.strip()
+        if color.startswith("#"):
+            color = color[1:]
+        if len(color) == 3:
+            color = "".join(ch * 2 for ch in color)
+        if len(color) != 6 or any(ch not in "0123456789abcdefABCDEF" for ch in color):
+            raise HTTPException(status_code=400, detail="Color must be a hex value like #ff00aa.")
+        selected_color = tuple(int(color[i:i + 2], 16) for i in (0, 2, 4))
+
+    try:
+        png_bytes = isolate_color_range(raw, float(intensity), selected_color)
+    except Exception as exc:
+        log.exception("Color range isolation failed")
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+    return Response(
+        content=png_bytes,
+        media_type="image/png",
+        headers={"Content-Disposition": 'inline; filename="isolated.png"'},
     )

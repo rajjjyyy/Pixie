@@ -2,8 +2,21 @@ import { useState, useRef, useEffect } from 'react'
 import styles from './ResultPanel.module.css'
 
 const CHECKER_BG = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16'%3E%3Crect width='8' height='8' fill='%230A0F2C'/%3E%3Crect x='8' y='8' width='8' height='8' fill='%230A0F2C'/%3E%3Crect x='8' y='0' width='8' height='8' fill='%23101640'/%3E%3Crect x='0' y='8' width='8' height='8' fill='%23101640'/%3E%3C/svg%3E")`
+const EYEDROPPER_CURSOR = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath fill='%23000' d='M20.49 3.51a2.5 2.5 0 0 1 0 3.54l-1.17 1.17L16.78 4.68l1.17-1.17a2.5 2.5 0 0 1 2.54-.99z'/%3E%3Cpath fill='%23fff' d='M16.78 4.68l2.54 2.54-8.5 8.5-2.54-2.54 8.5-8.5zm-10.7 10.7 2.83 2.83-4.24 1.41 1.41-4.24z'/%3E%3C/svg%3E") 2 22, crosshair`
 
-export default function ResultPanel({ originalURL, resultURL, status, onDownload }) {
+export default function ResultPanel({
+  originalURL,
+  resultURL,
+  status,
+  onDownload,
+  onStartColorSelection,
+  onColorPicked,
+  colorIntensity,
+  onColorIntensityChange,
+  isColorising,
+  isColorPicking,
+  selectedColor,
+}) {
   const [view, setView] = useState('split') // 'split' | 'original' | 'result'
 
   const showTabs = originalURL && (resultURL || status === 'done')
@@ -34,13 +47,36 @@ export default function ResultPanel({ originalURL, resultURL, status, onDownload
         )}
 
         {resultURL && (
-          <button className={styles.downloadBtn} onClick={onDownload}>
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-              <polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
-            </svg>
-            Save PNG
-          </button>
+          <div className={styles.actionsRow}>
+            <div className={styles.colorControlGroup}>
+              <button
+                className={styles.isolateBtn}
+                onClick={onStartColorSelection}
+                disabled={isColorising || status !== 'done'}
+              >
+                {isColorPicking ? 'Click the image' : 'Pick Color'}
+              </button>
+              <label className={styles.sliderLabel}>
+                <span>Intensity</span>
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  value={colorIntensity}
+                  onChange={(e) => onColorIntensityChange(Number(e.target.value))}
+                  disabled={isColorising || status !== 'done' || !selectedColor}
+                />
+                <strong>{colorIntensity}</strong>
+              </label>
+            </div>
+            <button className={styles.downloadBtn} onClick={onDownload}>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+              </svg>
+              Save PNG
+            </button>
+          </div>
         )}
       </div>
 
@@ -83,7 +119,7 @@ export default function ResultPanel({ originalURL, resultURL, status, onDownload
           <div className={styles.splitView}>
             <ImagePane label="Original" src={originalURL} showChecker={false} />
             {resultURL
-              ? <ImagePane label="Result" src={resultURL} showChecker={true} />
+              ? <ImagePane label="Result" src={resultURL} showChecker={true} isColorPicking={isColorPicking} onColorPicked={onColorPicked} />
               : <EmptyPane label="Result" status={status} />}
           </div>
         )}
@@ -93,19 +129,20 @@ export default function ResultPanel({ originalURL, resultURL, status, onDownload
           <ImagePane label="Original" src={originalURL} showChecker={false} fill />
         )}
         {resultURL && view === 'result' && (
-          <ImagePane label="Result" src={resultURL} showChecker={true} fill />
+          <ImagePane label="Result" src={resultURL} showChecker={true} fill isColorPicking={isColorPicking} onColorPicked={onColorPicked} />
         )}
       </div>
     </section>
   )
 }
 
-function ImagePane({ label, src, showChecker, fill }) {
+function ImagePane({ label, src, showChecker, fill, isColorPicking, onColorPicked }) {
   const [zoom, setZoom] = useState({ scale: 1, tx: 0, ty: 0 })
   const [panning, setPanning] = useState(false)
   const isPanning = useRef(false)
   const panOrigin = useRef({ x: 0, y: 0 })
   const containerRef = useRef(null)
+  const imageRef = useRef(null)
 
   // Reset zoom whenever a new image is loaded
   useEffect(() => {
@@ -170,15 +207,37 @@ function ImagePane({ label, src, showChecker, fill }) {
     }
   }, [])
 
+  const handleImageClick = (e) => {
+    if (!isColorPicking || !onColorPicked || !imageRef.current) return
+
+    const img = imageRef.current
+    const rect = img.getBoundingClientRect()
+    const x = ((e.clientX - rect.left) / rect.width) * img.naturalWidth
+    const y = ((e.clientY - rect.top) / rect.height) * img.naturalHeight
+
+    if (x < 0 || y < 0 || x > img.naturalWidth || y > img.naturalHeight) return
+
+    const canvas = document.createElement('canvas')
+    canvas.width = img.naturalWidth
+    canvas.height = img.naturalHeight
+    const ctx = canvas.getContext('2d')
+    ctx.drawImage(img, 0, 0)
+
+    const sample = ctx.getImageData(Math.floor(x), Math.floor(y), 1, 1).data
+    const hex = `#${[sample[0], sample[1], sample[2]].map((value) => value.toString(16).padStart(2, '0')).join('')}`
+    onColorPicked(hex)
+  }
+
   return (
     <div
       ref={containerRef}
       className={[styles.pane, fill ? styles.paneFill : ''].join(' ')}
       style={{
         ...(showChecker ? { backgroundImage: CHECKER_BG, backgroundSize: '16px 16px' } : {}),
-        cursor: panning ? 'grabbing' : 'default',
+        cursor: isColorPicking ? EYEDROPPER_CURSOR : panning ? 'grabbing' : 'default',
         userSelect: 'none',
       }}
+      onClick={handleImageClick}
     >
       <span className={styles.paneLabel}>{label}</span>
       <div
@@ -188,7 +247,7 @@ function ImagePane({ label, src, showChecker, fill }) {
           transformOrigin: '0 0',
         }}
       >
-        <img src={src} alt={label} className={styles.paneImg} draggable={false} />
+        <img ref={imageRef} src={src} alt={label} className={styles.paneImg} draggable={false} />
       </div>
     </div>
   )

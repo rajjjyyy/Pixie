@@ -15,6 +15,11 @@ export default function App() {
   const [status, setStatus]             = useState('idle') // idle | processing | done | error
   const [errorMsg, setErrorMsg]         = useState('')
   const [progress, setProgress]         = useState(0)
+  const [colorIntensity, setColorIntensity] = useState(50)
+  const [isColorising, setIsColorising] = useState(false)
+  const [isColorPicking, setIsColorPicking] = useState(false)
+  const [selectedColor, setSelectedColor] = useState(null)
+  const [baseResultBlob, setBaseResultBlob] = useState(null)
   const [backendOnline, setBackendOnline] = useState(null) // null=checking, true, false
 
   // Ping the backend health endpoint so we surface "server offline" clearly.
@@ -29,9 +34,14 @@ export default function App() {
     setOriginalURL(URL.createObjectURL(file))
     setResultURL(null)
     setResultBlob(null)
+    setBaseResultBlob(null)
     setStatus('idle')
     setErrorMsg('')
     setProgress(0)
+    setColorIntensity(50)
+    setSelectedColor(null)
+    setIsColorPicking(false)
+    setIsColorising(false)
   }, [])
 
   const handleRemove = async () => {
@@ -57,6 +67,7 @@ export default function App() {
       })
       setProgress(100)
       const blob = new Blob([res.data], { type: 'image/png' })
+      setBaseResultBlob(blob)
       setResultBlob(blob)
       setResultURL(URL.createObjectURL(blob))
       setStatus('done')
@@ -97,7 +108,85 @@ export default function App() {
     setStatus('idle')
     setErrorMsg('')
     setProgress(0)
+    setColorIntensity(50)
+    setSelectedColor(null)
+    setIsColorPicking(false)
+    setIsColorising(false)
+    setBaseResultBlob(null)
   }
+
+  const applyColorPreview = useCallback(async (colorHex, intensityValue) => {
+    if (!baseResultBlob) return
+
+    setIsColorising(true)
+    setErrorMsg('')
+
+    const formData = new FormData()
+    const file = new File([baseResultBlob], 'result.png', { type: 'image/png' })
+    formData.append('file', file)
+    formData.append('intensity', String(intensityValue))
+    formData.append('color', colorHex)
+
+    try {
+      const res = await axios.post('/api/isolate-color-range', formData, {
+        responseType: 'blob',
+      })
+      const blob = new Blob([res.data], { type: 'image/png' })
+      setResultBlob(blob)
+      setResultURL(URL.createObjectURL(blob))
+      setStatus('done')
+    } catch (err) {
+      let msg = err.message || 'Unknown error'
+      if (err.response?.data instanceof Blob) {
+        try {
+          const text = await err.response.data.text()
+          const json = JSON.parse(text)
+          msg = json.detail || json.error || text || msg
+        } catch {
+          // blob wasn't JSON — use the raw axios message
+        }
+      } else if (err.response?.data) {
+        msg = err.response.data.detail || err.response.data.error || msg
+      }
+      setErrorMsg(typeof msg === 'string' ? msg : JSON.stringify(msg))
+      setStatus('error')
+    } finally {
+      setIsColorising(false)
+    }
+  }, [baseResultBlob])
+
+  const handleStartColorSelection = () => {
+    if (!baseResultBlob) return
+    setIsColorPicking(true)
+    setErrorMsg('')
+    setResultBlob(baseResultBlob)
+    setResultURL(URL.createObjectURL(baseResultBlob))
+    setColorIntensity(50)
+    setSelectedColor(null)
+  }
+
+  const handleColorPicked = async (colorHex) => {
+    setIsColorPicking(false)
+    setSelectedColor(colorHex)
+    setResultBlob(baseResultBlob)
+    setResultURL(URL.createObjectURL(baseResultBlob))
+    setColorIntensity(50)
+    await applyColorPreview(colorHex, 0.5)
+  }
+
+  const handleColorIntensityChange = (value) => {
+    setColorIntensity(value)
+  }
+
+  useEffect(() => {
+    if (!selectedColor) return
+
+    const timer = window.setTimeout(() => {
+      void applyColorPreview(selectedColor, colorIntensity / 100)
+    }, 70)
+
+    return () => window.clearTimeout(timer)
+  }, [applyColorPreview, colorIntensity, selectedColor])
 
   return (
     <div className={styles.layout}>
@@ -168,6 +257,13 @@ export default function App() {
           resultURL={resultURL}
           status={status}
           onDownload={handleDownload}
+          onStartColorSelection={handleStartColorSelection}
+          onColorPicked={handleColorPicked}
+          colorIntensity={colorIntensity}
+          onColorIntensityChange={handleColorIntensityChange}
+          isColorising={isColorising}
+          isColorPicking={isColorPicking}
+          selectedColor={selectedColor}
         />
       </main>
     </div>
